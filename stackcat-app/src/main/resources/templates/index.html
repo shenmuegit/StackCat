@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StackCat - Method Call Tracking System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        nav {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+        nav a {
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        nav a:hover {
+            background: #e9ecef;
+        }
+        .content {
+            padding: 40px;
+        }
+        .overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .card h3 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .features {
+            margin-top: 40px;
+        }
+        .features h2 {
+            color: #495057;
+            margin-bottom: 20px;
+        }
+        .features ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .features li {
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+            color: #6c757d;
+        }
+        .features li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐱 StackCat</h1>
+            <p>Method Call Tracking & Statistics System</p>
+        </header>
+        <nav>
+            <ul>
+                <li><a href="/">首页</a></li>
+                <li><a href="/tracking">方法追踪</a></li>
+            </ul>
+        </nav>
+        <div class="content">
+            <div class="overview" id="overview">
+                <div class="card">
+                    <h3>总请求数</h3>
+                    <div class="value" id="totalRequests">-</div>
+                </div>
+                <div class="card">
+                    <h3>活跃请求</h3>
+                    <div class="value" id="activeRequests">-</div>
+                </div>
+                <div class="card">
+                    <h3>总方法调用</h3>
+                    <div class="value" id="totalMethodCalls">-</div>
+                </div>
+            </div>
+            <div class="features">
+                <h2>系统功能</h2>
+                <ul>
+                    <li>实时方法调用追踪</li>
+                    <li>线程级别的调用链分析</li>
+                    <li>方法调用统计</li>
+                    <li>HTTP请求头捕获</li>
+                    <li>树形时间线展示</li>
+                    <li>历史记录查询</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        async function loadOverview() {
+            try {
+                const response = await fetch('/api/statistics/overview');
+                const data = await response.json();
+                document.getElementById('totalRequests').textContent = data.totalRequests || 0;
+                document.getElementById('activeRequests').textContent = data.activeRequests || 0;
+                document.getElementById('totalMethodCalls').textContent = data.totalMethodCalls || 0;
+            } catch (error) {
+                console.error('Failed to load overview:', error);
+            }
+        }
+        loadOverview();
+        setInterval(loadOverview, 5000);
+    </script>
+</body>
+</html>
+

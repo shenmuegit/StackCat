@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StackCat - Method Tracking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 1.8em;
+        }
+        nav {
+            margin-bottom: 20px;
+        }
+        nav a {
+            color: #667eea;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .search-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+        .form-group input {
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 14px;
+            height: 38px;
+            box-sizing: border-box;
+        }
+        .form-group-button {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group-button .btn {
+            margin-top: 0;
+            height: 38px;
+            box-sizing: border-box;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            box-sizing: border-box;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .content-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+        .request-item {
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .request-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .request-header:hover {
+            background: #e9ecef;
+        }
+        .request-header.expanded {
+            border-bottom: 2px solid #667eea;
+        }
+        .expand-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            transition: transform 0.2s;
+        }
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+        .request-content {
+            display: none;
+        }
+        .request-content.expanded {
+            display: block;
+        }
+        .thread-item {
+            margin-bottom: 15px;
+            border-left: 3px solid #667eea;
+            padding-left: 15px;
+        }
+        .thread-header {
+            padding: 10px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .thread-header:hover {
+            background: #e9ecef;
+        }
+        .thread-header.expanded {
+            border-bottom: 2px solid #667eea;
+        }
+        .thread-content {
+            display: none;
+        }
+        .thread-content.expanded {
+            display: block;
+        }
+        .call-tree-container {
+            font-size: 11px;
+            padding: 15px;
+            background: #f8f9fa;
+            font-family: 'Courier New', 'Consolas', 'Monaco', 'Menlo', monospace;
+            line-height: 1.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        .tree-view {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+        .tree-node {
+            padding: 3px 0;
+            font-size: 13px;
+            font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
+            line-height: 1.6;
+        }
+        .tree-node.root {
+            margin-left: 0;
+        }
+        .tree-line {
+            color: #6c757d;
+            font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
+            display: inline-block;
+            white-space: pre;
+            margin-right: 4px;
+        }
+        .method-name {
+            color: #667eea;
+            font-weight: 500;
+        }
+        .method-name.slow {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .time {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .query-info {
+            color: #28a745;
+            font-size: 10px;
+            margin-left: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐱 StackCat - Method Tracking</h1>
+        </header>
+        <nav>
+            <a href="/">首页</a>
+            <a href="/tracking">方法追踪</a>
+        </nav>
+        <div class="search-panel">
+            <form class="search-form" id="searchForm">
+                <div class="form-group">
+                    <label>请求ID</label>
+                    <input type="text" id="requestId" placeholder="输入请求ID">
+                </div>
+                <div class="form-group">
+                    <label>开始时间</label>
+                    <input type="datetime-local" id="startTime">
+                </div>
+                <div class="form-group">
+                    <label>结束时间</label>
+                    <input type="datetime-local" id="endTime">
+                </div>
+                <div class="form-group form-group-button">
+                    <label style="visibility: hidden;">按钮</label>
+                    <button type="button" class="btn" onclick="search()">搜索</button>
+                </div>
+            </form>
+        </div>
+        <div class="content-panel">
+            <div id="requestsList"></div>
+        </div>
+    </div>
+    <script>
+        async function search() {
+            const requestId = document.getElementById('requestId').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            
+            let url = '/api/tracking/history?';
+            if (requestId) url += `requestId=${requestId}&`;
+            if (startTime) url += `startTime=${startTime}&`;
+            if (endTime) url += `endTime=${endTime}&`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                displayRequestsWithTrees(data);
+            } catch (error) {
+                console.error('Search failed:', error);
+            }
+        }
+        
+        async function loadAllRequests() {
+            try {
+                const response = await fetch('/api/tracking/history');
+                const data = await response.json();
+                displayRequestsWithTrees(data);
+            } catch (error) {
+                console.error('Failed to load requests:', error);
+            }
+        }
+        
+        async function loadTreeForRequest(requestTraceId) {
+            try {
+                const response = await fetch(`/api/tracking/tree/${requestTraceId}`);
+                const tree = await response.json();
+                return tree;
+            } catch (error) {
+                console.error('Failed to load tree:', error);
+                return null;
+            }
+        }
+        
+        async function displayRequestsWithTrees(requests) {
+            const container = document.getElementById('requestsList');
+            if (requests.length === 0) {
+                container.innerHTML = '<p>未找到匹配的记录</p>';
+                return;
+            }
+            
+            // 按 requestId 分组，使用 Map 保持插入顺序
+            const groupedByRequestId = new Map();
+            const requestIdOrder = []; // 记录 requestId 的首次出现顺序
+            
+            requests.forEach(req => {
+                const requestId = req.requestId || '未知';
+                if (!groupedByRequestId.has(requestId)) {
+                    groupedByRequestId.set(requestId, []);
+                    requestIdOrder.push(requestId);
+                }
+                groupedByRequestId.get(requestId).push(req);
+            });
+            
+            // 生成HTML，按照原始顺序遍历
+            let html = '';
+            let requestIndex = 0;
+            const allTraceIds = []; // 存储所有需要加载调用树的traceId
+            
+            for (const requestId of requestIdOrder) {
+                const requestList = groupedByRequestId.get(requestId);
+                const requestKey = `request-${requestIndex}`;
+                // 计算该requestId的最早开始时间和最晚结束时间
+                const startTimes = requestList.map(r => r.startTime).filter(t => t);
+                const endTimes = requestList.map(r => r.endTime).filter(t => t);
+                const earliestStart = startTimes.length > 0 ? new Date(Math.min(...startTimes.map(t => new Date(t).getTime()))) : null;
+                const latestEnd = endTimes.length > 0 ? new Date(Math.max(...endTimes.map(t => new Date(t).getTime()))) : null;
+                
+                html += `<div class="request-item">
+                    <div class="request-header" onclick="toggleRequest('${requestKey}')">
+                        <span class="expand-icon">▶</span>
+                        <strong>请求ID:</strong> ${escapeHtml(requestId)} 
+                        <span style="margin-left: 20px;"><strong>线程数:</strong> ${requestList.length}</span>
+                        <span style="margin-left: 20px;"><strong>开始时间:</strong> ${earliestStart ? formatDateTime(earliestStart.toISOString()) : '-'}</span>
+                        <span style="margin-left: 20px;"><strong>结束时间:</strong> ${latestEnd ? formatDateTime(latestEnd.toISOString()) : '-'}</span>
+                    </div>
+                    <div class="request-content" id="${requestKey}-content">
+                        ${renderThreadsForRequest(requestList, requestIndex)}
+                    </div>
+                </div>`;
+                
+                // 收集所有traceId
+                requestList.forEach(req => {
+                    allTraceIds.push({ id: req.id, requestKey: requestKey });
+                });
+                
+                requestIndex++;
+            }
+            container.innerHTML = html;
+            
+            // 异步加载所有调用树
+            for (const trace of allTraceIds) {
+                const tree = await loadTreeForRequest(trace.id);
+                const treeContainer = document.getElementById(`tree-${trace.id}`);
+                if (treeContainer) {
+                    if (tree) {
+                        treeContainer.innerHTML = renderTreeNodes(tree, 0);
+                    } else {
+                        treeContainer.innerHTML = '<div style="text-align: center; color: #dc3545;">加载调用树失败</div>';
+                    }
+                }
+            }
+        }
+        
+        function renderThreadsForRequest(requestList, requestIndex) {
+            // 对线程列表按 id 正序排序
+            const sortedList = [...requestList].sort((a, b) => {
+                if (a.id && b.id) {
+                    return a.id - b.id;
+                }
+                return 0;
+            });
+            
+            let html = '';
+            let threadIndex = 0;
+            for (const req of sortedList) {
+                const threadKey = `request-${requestIndex}-thread-${threadIndex}`;
+                html += `<div class="thread-item">
+                    <div class="thread-header" onclick="toggleThread('${threadKey}')">
+                        <span class="expand-icon" style="font-size: 12px;">▶</span>
+                        <strong>线程名:</strong> ${escapeHtml(req.threadName || '-')}
+                        <span style="margin-left: 20px;"><strong>开始时间:</strong> ${formatDateTime(req.startTime)}</span>
+                        <span style="margin-left: 20px;"><strong>结束时间:</strong> ${req.endTime ? formatDateTime(req.endTime) : '-'}</span>
+                    </div>
+                    <div class="thread-content" id="${threadKey}-content">
+                        <div class="call-tree-container" id="tree-${req.id}">
+                            <div style="text-align: center; color: #6c757d;">加载中...</div>
+                        </div>
+                    </div>
+                </div>`;
+                threadIndex++;
+            }
+            return html;
+        }
+        
+        function toggleThread(threadKey) {
+            const content = document.getElementById(`${threadKey}-content`);
+            const header = content.previousElementSibling;
+            const icon = header.querySelector('.expand-icon');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                header.classList.remove('expanded');
+                icon.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                header.classList.add('expanded');
+                icon.classList.add('expanded');
+            }
+        }
+        
+        function toggleRequest(requestKey) {
+            const content = document.getElementById(`${requestKey}-content`);
+            const header = content.previousElementSibling;
+            const icon = header.querySelector('.expand-icon');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                header.classList.remove('expanded');
+                icon.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                header.classList.add('expanded');
+                icon.classList.add('expanded');
+            }
+        }
+        
+        function renderTreeNodes(nodes, depth, parentPrefix = '') {
+            if (!nodes || nodes.length === 0) {
+                return '<div style="color: #6c757d; padding: 10px;">无调用树数据</div>';
+            }
+            
+            let html = '';
+            nodes.forEach((node, index) => {
+                const isLast = index === nodes.length - 1;
+                const hasChildren = node.children && node.children.length > 0;
+                
+                // 构建前缀：使用树形连接符
+                // 根节点（depth=0）没有前缀，其他节点都有
+                let prefix = parentPrefix;
+                if (depth > 0) {
+                    // 根据是否为最后一个节点选择连接符
+                    if (isLast) {
+                        prefix += '└─ ';  // 最后一个子节点
+                    } else {
+                        prefix += '├─ ';  // 非最后一个子节点
+                    }
+                }
+                
+                const queryInfo = node.query ? `<span class="query-info">[SQL: ${escapeHtml(node.query.substring(0, 50))}${node.query.length > 50 ? '...' : ''}]</span>` : '';
+                html += `<div class="tree-node ${depth === 0 ? 'root' : ''}">
+                    <span class="tree-line">${prefix}</span><span class="method-name">${escapeHtml(node.className)}.${escapeHtml(node.methodName)}</span> <span class="time">(${formatDateTime(node.callTime)})</span>${queryInfo ? ' ' + queryInfo : ''}
+                </div>`;
+                
+                // 递归渲染子节点
+                if (hasChildren) {
+                    // 构建子节点的前缀
+                    let childPrefix = parentPrefix;
+                    if (depth === 0) {
+                        // 根节点的子节点，前缀为空（因为根节点本身没有前缀）
+                        childPrefix = '';
+                    } else {
+                        // 非根节点的子节点
+                        if (isLast) {
+                            childPrefix += '   ';  // 最后一个节点，子节点用空格对齐（3个空格）
+                        } else {
+                            childPrefix += '│  ';  // 非最后一个节点，子节点需要垂直连接线
+                        }
+                    }
+                    html += renderTreeNodes(node.children, depth + 1, childPrefix);
+                }
+            });
+            return html;
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatDateTime(dateTimeString) {
+            if (!dateTimeString) return '-';
+            try {
+                const date = new Date(dateTimeString);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hour = String(date.getHours()).padStart(2, '0');
+                const minute = String(date.getMinutes()).padStart(2, '0');
+                const second = String(date.getSeconds()).padStart(2, '0');
+                const millisecond = String(date.getMilliseconds()).padStart(3, '0');
+                return `${year}/${month}/${day} ${hour}:${minute}:${second}.${millisecond}`;
+            } catch (e) {
+                return dateTimeString;
+            }
+        }
+        
+        // Initialize
+        loadAllRequests();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: StackCat
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/stackcat
+    username: postgres
+    password: 111111
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: StackCatHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+  
+  sql:
+    init:
+      mode: never
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+
+server:
+  port: 8080
+
+logging:
+  file:
+    name: stackcat-app.log  # 日志文件名，将保存在项目根目录
+  level:
+    root: INFO  # 根日志级别
+    com.stackcat: DEBUG  # 应用包的日志级别
+    org.springframework: INFO  # Spring框架日志级别
+    org.mybatis: DEBUG  # MyBatis日志级别
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"  # 控制台日志格式
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"  # 文件日志格式
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB  # 单个日志文件最大大小
+      max-history: 30  # 保留日志文件的天数
+
+mybatis-plus:
+  type-aliases-package: com.stackcat.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+stackcat:
+  filter:
+    packages:
+      # 默认只跟踪应用自己的包（com.stackcat），如果需要跟踪其他包，在此配置
+      # exclude: []  # 排除的包列表，例如: ["org.springframework", "org.hibernate"]
+      include: ["com.stackcat"]  # 只跟踪这些包，默认只跟踪应用自己的代码
+  agent:
+    async:
+      interval: 1000  # 毫秒
+      batch-size: 10   # 请求数量
+    api:
+      url: http://localhost:8080/api/tracking/batch
+

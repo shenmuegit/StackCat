@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Premain-Class: com.stackcat.agent.MethodTrackingAgent
+Can-Redefine-Classes: true
+Can-Retransform-Classes: true
+

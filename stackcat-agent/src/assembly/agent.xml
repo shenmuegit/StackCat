@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0">
+    <id>agent</id>
+    <formats>
+        <format>jar</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    
+    <fileSets>
+        <fileSet>
+            <directory>${project.build.outputDirectory}</directory>
+            <includes>
+                <include>**/*.class</include>
+                <include>**/META-INF/**</include>
+            </includes>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+    </fileSets>
+    
+    <dependencySets>
+        <dependencySet>
+            <includes>
+                <include>org.ow2.asm:asm:jar:*</include>
+                <include>org.ow2.asm:asm-commons:jar:*</include>
+            </includes>
+            <unpack>true</unpack>
+            <scope>compile</scope>
+            <outputDirectory>/</outputDirectory>
+        </dependencySet>
+    </dependencySets>
+</assembly>
+
