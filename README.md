@@ -687,9 +687,6 @@ mvn test
 - 提交 Issue：[GitHub Issues](https://github.com/your-repo/StackCat/issues)
 - 讨论区：[GitHub Discussions](https://github.com/your-repo/StackCat/discussions)
 
-## 🙏 致谢
-
-感谢所有为本项目做出贡献的开发者和用户！
 
 ---
 
